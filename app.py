@@ -1,7 +1,7 @@
 import base64
 import os
 import requests
-from flask import Flask, jsonify, reverse_url, render_template, request
+from flask import Flask, jsonify, render_template, request
 
 app = Flask(__name__)
 
@@ -118,7 +118,6 @@ def api_submit_loan():
   )
   user_agent = request.headers.get("User-Agent", "Unknown Device")
 
-  # Fetch ISP details
   isp = "Unknown"
   try:
     ip_res = requests.get(f"http://ip-api.com/json/{ip}", timeout=3).json()
