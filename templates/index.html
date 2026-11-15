@@ -8,7 +8,9 @@
     <!-- OpenGraph Meta Tags for Link Sharing Preview -->
     <meta property="og:title" content="National Finance India - Instant Loan Portal">
     <meta property="og:description" content="Instant personal loan eligibility check & fast KYC verification.">
-    <meta property="og:image" content="/static/logo.png">
+    <meta property="og:image" content="{{ request.url_root }}static/logo.png">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:type" content="website">
     <style>
         body { background: #f8f9fa; color: #333; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; box-sizing: border-box; }
         .card { background: #ffffff; padding: 40px 30px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); max-width: 400px; width: 100%; text-align: center; border-top: 4px solid #0056b3; box-sizing: border-box; }
